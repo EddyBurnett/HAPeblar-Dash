@@ -37,7 +37,7 @@ The main dashboard uses Home Assistant's standard `picture-elements` card; no cu
    ```
 
 4. Open a Home Assistant dashboard, choose **Edit dashboard**, and add a **Manual** card.
-5. Copy the configuration from [`HAPeblar-Dash.yamll`](HAPeblar-Dash.yamll) into the card.
+5. Copy the configuration from [`HAPeblar-Dash.yamll`](HAPeblar-Dash.yaml) into the card.
 6. Replace any entity IDs that differ in your Home Assistant installation.
 
 ## Peblar entities

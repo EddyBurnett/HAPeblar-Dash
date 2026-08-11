@@ -4,7 +4,7 @@ A custom Home Assistant dashboard for a Peblar EV Charger, built with the standa
 
 ## Screenshot
 
-![Home Assistant Peblar EV Charger dashboard](images/HA_Peblar_dash.png)
+![Home Assistant Peblar EV Charger dashboard](images/HA_Peblar_Dash.gif)
 
 ## Features
 

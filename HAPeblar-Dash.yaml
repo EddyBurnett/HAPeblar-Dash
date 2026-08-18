@@ -137,6 +137,7 @@ elements:
     entity: sensor.peblar_ev_charger_state
     triggers_update:
       - sensor.peblar_ev_charger_power
+      - number.peblar_ev_charger_charge_limit
       - sensor.peblar_ev_charger_session_energy
       - sensor.peblar_ev_charger_lifetime_energy
       - update.peblar_ev_charger_firmware
@@ -166,6 +167,16 @@ elements:
 
           const powerRaw =
             Number(states['sensor.peblar_ev_charger_power']?.state || 0);
+
+          const chargeLimitRaw =
+            Number(
+              states['number.peblar_ev_charger_charge_limit']?.state
+            );
+
+          const chargeLimit =
+            Number.isFinite(chargeLimitRaw)
+              ? `${chargeLimitRaw.toFixed(0)} A`
+              : '-';
 
           const session =
             Number(states['sensor.peblar_ev_charger_session_energy']?.state || 0);
@@ -199,6 +210,11 @@ elements:
               </div>
 
               <div class="info-row">
+                <span class="label">Charge limit</span>
+                <span class="value">${chargeLimit}</span>
+              </div>
+
+              <div class="info-row">
                 <span class="label">Session</span>
                 <span class="value">${session.toFixed(2)} kWh</span>
               </div>
@@ -223,7 +239,7 @@ elements:
         - box-shadow: none !important
         - padding: 10px 12px
       grid:
-        - grid-template-areas: "\"info\""
+        - grid-template-areas: '"info"'
         - grid-template-columns: 1fr
         - grid-template-rows: auto
       custom_fields:
@@ -272,7 +288,7 @@ elements:
     icon: mdi:gauge
     show_name: true
     show_icon: true
-    show_state: true
+    show_state: false
     tap_action:
       action: more-info
     hold_action:
@@ -281,22 +297,43 @@ elements:
       card:
         - width: 68px
         - padding: 6px 4px
-        - background: rgba(0,0,0,0.28)
         - border-radius: 11px
-        - border: 1px solid rgba(255,255,255,0.10)
-        - box-shadow: none
+        - background: rgba(0,0,0,0.28)
+        - --amp-hue: |
+            [[[
+              const value = Number(entity.state);
+
+              if (!Number.isFinite(value)) {
+                return 210;
+              }
+
+              const minimum = 6;
+              const maximum = 19;
+              const ratio = Math.min(
+                1,
+                Math.max(0, (value - minimum) / (maximum - minimum))
+              );
+
+              return Math.round(120 * (1 - ratio));
+            ]]]
+        - border: 1px solid hsla(var(--amp-hue), 85%, 65%, 0.65)
+        - box-shadow: 0 0 10px hsla(var(--amp-hue), 85%, 55%, 0.25)
+        - transition: border 0.4s ease, box-shadow 0.4s ease
       icon:
         - width: 25px
-        - color: "#2196F3"
+        - color: hsl(var(--amp-hue), 85%, 65%)
+        - filter: drop-shadow(0 0 5px hsla(var(--amp-hue), 85%, 55%, 0.60))
+        - transition: color 0.4s ease, filter 0.4s ease
       name:
         - color: var(--primary-text-color)
         - font-size: 10px
         - margin-top: 3px
       state:
-        - color: var(--primary-text-color)
+        - color: hsl(var(--amp-hue), 85%, 70%)
         - font-size: 10px
-        - font-weight: 500
+        - font-weight: 600
         - margin-top: 2px
+        - transition: color 0.4s ease
     style:
       left: 10%
       top: 59%
@@ -304,11 +341,34 @@ elements:
       z-index: 5
   - type: custom:button-card
     entity: switch.peblar_ev_charger_force_single_phase
-    name: 1 phase
-    icon: mdi:numeric-1-circle-outline
+    name: |
+      [[[
+        return entity.state === 'on'
+          ? '1 phase'
+          : '3 phase';
+      ]]]
     show_name: true
-    show_icon: true
+    show_icon: false
     show_state: false
+    custom_fields:
+      phase_icon: |
+        [[[
+          if (entity.state === 'on') {
+            return `
+              <div class="phase-waves single">
+                <ha-icon icon="mdi:sine-wave"></ha-icon>
+              </div>
+            `;
+          }
+
+          return `
+            <div class="phase-waves triple">
+              <ha-icon icon="mdi:sine-wave"></ha-icon>
+              <ha-icon icon="mdi:sine-wave"></ha-icon>
+              <ha-icon icon="mdi:sine-wave"></ha-icon>
+            </div>
+          `;
+        ]]]
     tap_action:
       action: toggle
     hold_action:
@@ -319,39 +379,96 @@ elements:
         - padding: 6px 4px
         - background: rgba(0,0,0,0.28)
         - border-radius: 11px
-        - border: |
-            [[[
-              return entity.state === 'on'
-                ? '1px solid rgba(255,193,7,0.65)'
-                : '1px solid rgba(255,255,255,0.10)';
-            ]]]
-        - box-shadow: |
-            [[[
-              return entity.state === 'on'
-                ? '0 0 10px rgba(255,193,7,0.25)'
-                : 'none';
-            ]]]
-      icon:
-        - width: 25px
-        - color: |
+        - --phase-color: |
             [[[
               return entity.state === 'on'
                 ? '#FFC107'
                 : '#2196F3';
             ]]]
-        - filter: |
+        - border: |
             [[[
               return entity.state === 'on'
-                ? 'drop-shadow(0 0 5px rgba(255,193,7,0.60))'
+                ? '1px solid rgba(255,193,7,0.75)'
+                : '1px solid rgba(255,255,255,0.10)';
+            ]]]
+        - box-shadow: |
+            [[[
+              return entity.state === 'on'
+                ? '0 0 12px rgba(255,193,7,0.45)'
                 : 'none';
             ]]]
+        - transition: border 0.3s ease, box-shadow 0.3s ease
+      grid:
+        - grid-template-areas: '"phase_icon" "n"'
+        - grid-template-columns: 1fr
+        - grid-template-rows: 27px min-content
+      custom_fields:
+        phase_icon:
+          - justify-self: center
+          - align-self: center
+          - color: var(--phase-color)
+          - filter: |
+              [[[
+                return entity.state === 'on'
+                  ? 'drop-shadow(0 0 5px rgba(255,193,7,0.65))'
+                  : 'none';
+              ]]]
+          - transition: color 0.3s ease, filter 0.3s ease
       name:
         - color: var(--primary-text-color)
         - font-size: 10px
         - margin-top: 3px
+    extra_styles: |
+      .phase-waves {
+        color: inherit;
+      }
+
+      .phase-waves ha-icon {
+        display: block;
+        color: inherit;
+      }
+
+      .phase-waves.single {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .phase-waves.single ha-icon {
+        width: 25px;
+        height: 25px;
+      }
+
+      .phase-waves.triple {
+        position: relative;
+        width: 41px;
+        height: 25px;
+      }
+
+      .phase-waves.triple ha-icon {
+        position: absolute;
+        top: 0;
+        width: 25px;
+        height: 25px;
+      }
+
+      .phase-waves.triple ha-icon:nth-child(1) {
+        left: 0;
+        opacity: 0.60;
+      }
+
+      .phase-waves.triple ha-icon:nth-child(2) {
+        left: 6px;
+        opacity: 0.80;
+      }
+
+      .phase-waves.triple ha-icon:nth-child(3) {
+        left: 12px;
+        opacity: 1;
+      }
     style:
       left: 10%
-      top: 75%
+      top: 73%
       transform: translate(-50%, -50%)
       z-index: 5
   - type: custom:apexcharts-card

@@ -10,8 +10,9 @@ A custom Home Assistant dashboard for a Peblar EV Charger, built with the standa
 
 - Charging-mode controls: Default, Fast Solar, Smart Solar, and Pure Solar
 - Start/stop charging control
-- Charge-limit control and single-phase toggle
-- Live state, power, session energy, lifetime energy, and firmware information
+- Colour-coded charge-limit control for the 6-19 A range
+- Dynamic phase control showing blue **3 phase** or highlighted yellow **1 phase**
+- Live state, power, charge limit, session energy, lifetime energy, and firmware information
 - Animated virtual charger status LED
 - Seven-day daily energy-use chart
 - Transparent styling designed around a Peblar charger background image
@@ -57,6 +58,25 @@ The dashboard configuration uses these entities from the Peblar integration:
 | `update.peblar_ev_charger_firmware` | Firmware status |
 
 Entity IDs can vary depending on the device name used during setup.
+
+## Charge limit indicator
+
+The Charge limit button uses a colour scale based on `number.peblar_ev_charger_charge_limit`:
+
+- 6 A starts at light green
+- Mid-range values transition through yellow and orange
+- 19 A ends at light red
+
+The button keeps the same dark background as the other controls while its icon, border, and outer highlight change colour. The selected amperage is shown in the information panel directly below Power instead of inside the button.
+
+## Phase control
+
+The phase button changes its label, icon, and styling according to `switch.peblar_ev_charger_force_single_phase`:
+
+- Off: blue **3 phase** button with three horizontally overlapping sine-wave icons
+- On: highlighted yellow **1 phase** button with a single sine-wave icon
+
+When the switch is off, single-phase charging is not forced. Actual three-phase charging still depends on the vehicle, electrical installation, and selected charging mode.
 
 ## Virtual status LED
 
